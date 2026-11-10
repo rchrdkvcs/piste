@@ -2,10 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../state/candidature_controller.dart';
-import '../../theme/typo.dart';
+import '../../theme/app_theme.dart';
 import '../adaptive/adaptive.dart';
 
-/// Chargement : indicateur natif (roue iOS, cercle Material).
 class VueChargement extends StatelessWidget implements SliverPleinEcran {
   const VueChargement({super.key});
 
@@ -19,11 +18,10 @@ class VueChargement extends StatelessWidget implements SliverPleinEcran {
   );
 }
 
-/// État vide, erreur ou aucun résultat : ce qui se passe, puis quoi faire.
 class VueMessage extends StatelessWidget implements SliverPleinEcran {
   const VueMessage({
     super.key,
-    required this.icone,
+    this.icone,
     required this.titre,
     required this.message,
     this.action,
@@ -32,9 +30,8 @@ class VueMessage extends StatelessWidget implements SliverPleinEcran {
     this.illustration,
   });
 
-  /// Remplace la pastille d'icône (logo sur le premier écran).
   final Widget? illustration;
-  final IconData icone;
+  final IconData? icone;
   final String titre;
   final String message;
   final String? action;
@@ -45,8 +42,6 @@ class VueMessage extends StatelessWidget implements SliverPleinEcran {
   Widget build(BuildContext context) {
     final teinte = couleur ?? couleurAccent(context);
     final libelle = action;
-    // La marge basse (barre d'onglets, zone sûre) est incluse ici pour que
-    // le bloc reste centré dans l'espace visible sans créer de défilement.
     final bas = MediaQuery.paddingOf(context).bottom;
     return SliverFillRemaining(
       hasScrollBody: false,
@@ -62,7 +57,7 @@ class VueMessage extends StatelessWidget implements SliverPleinEcran {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: teinte.withValues(alpha: 0.12),
+                      color: teinteDouce(teinte),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icone, size: 36, color: teinte),
@@ -97,7 +92,6 @@ class VueMessage extends StatelessWidget implements SliverPleinEcran {
   }
 }
 
-/// Lecture SQLite en échec : jamais présentée comme une liste vide.
 class VueErreurLecture extends StatelessWidget implements SliverPleinEcran {
   const VueErreurLecture({super.key, required this.controller});
 

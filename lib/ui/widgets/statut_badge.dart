@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/candidature.dart';
 import '../../theme/statut_couleurs.dart';
-import '../../theme/typo.dart';
+import '../adaptive/adaptive.dart';
 
-/// Pastille du statut : le libellé porte le sens, la couleur le renforce.
 class StatutBadge extends StatelessWidget {
   const StatutBadge(this.statut, {super.key});
 

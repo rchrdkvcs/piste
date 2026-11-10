@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import '../../format/dates.dart';
 import '../../models/candidature.dart';
 import '../../state/candidature_controller.dart';
-import '../../theme/typo.dart';
+import '../actions/actions_candidature.dart';
 import '../adaptive/adaptive.dart';
 import '../formulaire/candidature_form_page.dart';
 import '../widgets/avatar_entreprise.dart';
 import '../widgets/statut_badge.dart';
 import '../widgets/vues_etat.dart';
-import 'actions_candidature.dart';
 import 'lignes_fiche.dart';
 
 Future<void> ouvrirDetail(
@@ -24,9 +23,6 @@ Future<void> ouvrirDetail(
   );
 }
 
-/// Fiche en lecture seule. Elle relit la candidature dans le contrôleur à
-/// chaque notification : une modification faite dans le formulaire est
-/// visible dès le retour.
 class CandidatureDetailPage extends StatefulWidget {
   const CandidatureDetailPage({
     super.key,
@@ -42,8 +38,6 @@ class CandidatureDetailPage extends StatefulWidget {
 }
 
 class _CandidatureDetailPageState extends State<CandidatureDetailPage> {
-  /// Dernière version connue, affichée pendant l'animation de fermeture
-  /// après une suppression.
   Candidature? _derniere;
   bool _suppression = false;
 
@@ -124,7 +118,11 @@ class _CandidatureDetailPageState extends State<CandidatureDetailPage> {
         final cupertino = estCupertino(context);
         final bloque = _suppression || widget.controller.occupe;
 
-        final suivi = lignesSuivi(c, ouvrir: _ouvrir);
+        final suivi = lignesSuivi(
+          c,
+          ouvrir: _ouvrir,
+          maintenant: DateTime.now(),
+        );
         final contact = lignesContact(c, ouvrir: _ouvrir);
 
         return AdaptivePage(

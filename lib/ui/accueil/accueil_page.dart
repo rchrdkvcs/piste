@@ -2,20 +2,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../format/dates.dart';
+import '../../format/texte.dart';
 import '../../models/candidature.dart';
 import '../../state/candidature_controller.dart';
 import '../../state/preferences_controller.dart';
 import '../../theme/statut_couleurs.dart';
-import '../../theme/typo.dart';
 import '../adaptive/adaptive.dart';
-import '../fiche/candidature_detail_page.dart';
 import '../formulaire/candidature_form_page.dart';
-import '../widgets/candidature_tile.dart';
 import '../widgets/indicateur.dart';
+import '../widgets/liste_candidatures.dart';
 import '../widgets/logo_piste.dart';
 import '../widgets/vues_etat.dart';
 
-/// Tableau de bord : salutation, indicateurs et dernières candidatures.
 class AccueilPage extends StatelessWidget {
   const AccueilPage({
     super.key,
@@ -41,22 +39,11 @@ class AccueilPage extends StatelessWidget {
         return AdaptivePage(
           titre: nom.isEmpty ? 'Bonjour' : 'Bonjour, $nom',
           surActualisation: () => controller.charger(silencieux: true),
-          actions: [
-            ActionBarre(
-              libelle: 'Ajouter une candidature',
-              symbole: 'plus',
-              iconeCupertino: CupertinoIcons.add,
-              principale: true,
-              seulementIos: true,
-              onPressed: ajouter,
-            ),
-          ],
-          boutonFlottant: controller.etat == EtatChargement.pret
-              ? FloatingActionButton.extended(
-                  heroTag: 'ajouter-accueil',
+          actionPrincipale: controller.lisible
+              ? ActionPrincipale(
+                  libelle: 'Ajouter une candidature',
+                  libelleCourt: 'Ajouter',
                   onPressed: ajouter,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Ajouter'),
                 )
               : null,
           slivers: switch (controller.etat) {
@@ -64,11 +51,6 @@ class AccueilPage extends StatelessWidget {
             EtatChargement.erreur => [VueErreurLecture(controller: controller)],
             EtatChargement.vide => [
               VueMessage(
-                icone: icone(
-                  context,
-                  Icons.work_outline,
-                  CupertinoIcons.briefcase,
-                ),
                 illustration: const LogoPiste(taille: 88),
                 titre: 'Bienvenue dans Piste',
                 message:
@@ -86,10 +68,8 @@ class AccueilPage extends StatelessWidget {
   }
 
   List<Widget> _contenu(BuildContext context) {
-    final recentes = controller.candidatures.take(_nombreRecentes).toList();
     final aRelancer = controller.aRelancer();
     final voirTout = onVoirTout;
-
     return [
       Marge(
         sliver: SliverToBoxAdapter(
@@ -101,51 +81,7 @@ class AccueilPage extends StatelessWidget {
                 style: Typo.secondaire(context),
               ),
               const SizedBox(height: 20),
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Indicateur(
-                        valeur: controller.total,
-                        libelle: 'Candidatures',
-                        icone: icone(
-                          context,
-                          Icons.work_outline,
-                          CupertinoIcons.briefcase_fill,
-                        ),
-                        couleur: Statut.enCours.couleur,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Indicateur(
-                        valeur: controller.compter(Statut.entretien),
-                        libelle: 'Entretiens',
-                        icone: icone(
-                          context,
-                          Icons.event_available_outlined,
-                          CupertinoIcons.person_2_fill,
-                        ),
-                        couleur: Statut.entretien.couleur,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Indicateur(
-                        valeur: controller.compter(Statut.offre),
-                        libelle: 'Offres',
-                        icone: icone(
-                          context,
-                          Icons.star_outline_rounded,
-                          CupertinoIcons.star_fill,
-                        ),
-                        couleur: Statut.offre.couleur,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _indicateurs(context),
             ],
           ),
         ),
@@ -154,69 +90,81 @@ class AccueilPage extends StatelessWidget {
         Marge(
           sliver: SliverToBoxAdapter(
             child: TitreSection(
-              aRelancer.length > 1
-                  ? '${aRelancer.length} candidatures à relancer'
-                  : '1 candidature à relancer',
+              '${pluriel(aRelancer.length, 'candidature')} à relancer',
             ),
           ),
         ),
-        Marge(
-          sliver: SliverList.separated(
-            itemCount: aRelancer.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, i) {
-              final c = aRelancer[i];
-              return CandidatureTile(
-                candidature: c,
-                precision: 'Relance ${echeanceRelative(c.prochaineRelance!)}',
-                onTap: () => ouvrirDetail(context, controller, c.id!),
-              );
-            },
-          ),
+        SliverCandidatures(
+          candidatures: aRelancer,
+          controller: controller,
+          precision: (c) => 'Relance ${echeanceRelative(c.prochaineRelance!)}',
         ),
       ],
       Marge(
         sliver: SliverToBoxAdapter(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TitreSection(
-                'Dernières candidatures',
-                action: voirTout == null
-                    ? null
-                    : Semantics(
-                        label: 'Voir toutes les candidatures',
-                        excludeSemantics: true,
-                        button: true,
-                        child: estCupertino(context)
-                            ? CupertinoButton(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                minimumSize: const Size(44, 44),
-                                onPressed: voirTout,
-                                child: const Text('Tout voir'),
-                              )
-                            : TextButton(
-                                onPressed: voirTout,
-                                child: const Text('Tout voir'),
-                              ),
-                      ),
-              ),
-            ],
+          child: TitreSection(
+            'Dernières candidatures',
+            action: voirTout == null
+                ? null
+                : BoutonTexte(
+                    libelle: 'Tout voir',
+                    semantique: 'Voir toutes les candidatures',
+                    onPressed: voirTout,
+                  ),
           ),
         ),
       ),
-      Marge(
-        sliver: SliverList.separated(
-          itemCount: recentes.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (context, i) => CandidatureTile(
-            candidature: recentes[i],
-            onTap: () => ouvrirDetail(context, controller, recentes[i].id!),
-          ),
-        ),
+      SliverCandidatures(
+        candidatures: controller.candidatures.take(_nombreRecentes).toList(),
+        controller: controller,
       ),
     ];
+  }
+
+  Widget _indicateurs(BuildContext context) {
+    final i = controller.indicateurs;
+    Widget carte(
+      int valeur,
+      String libelle,
+      IconData m,
+      IconData c,
+      Statut s,
+    ) => Expanded(
+      child: Indicateur(
+        valeur: valeur,
+        libelle: libelle,
+        icone: icone(context, m, c),
+        couleur: s.couleur,
+      ),
+    );
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 12,
+        children: [
+          carte(
+            i.total,
+            'Candidatures',
+            Icons.work_outline,
+            CupertinoIcons.briefcase_fill,
+            Statut.enCours,
+          ),
+          carte(
+            i.compter(Statut.entretien),
+            'Entretiens',
+            Icons.event_available_outlined,
+            CupertinoIcons.person_2_fill,
+            Statut.entretien,
+          ),
+          carte(
+            i.compter(Statut.offre),
+            'Offres',
+            Icons.star_outline_rounded,
+            CupertinoIcons.star_fill,
+            Statut.offre,
+          ),
+        ],
+      ),
+    );
   }
 }

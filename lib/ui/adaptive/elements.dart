@@ -1,11 +1,11 @@
 import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
-import '../../theme/typo.dart';
 import 'plateforme.dart';
+import 'typo.dart';
 
-/// Marges horizontales communes des pages.
 class Marge extends StatelessWidget {
   const Marge({super.key, required this.sliver, this.haut = 0});
 
@@ -14,12 +14,16 @@ class Marge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SliverPadding(
-    padding: EdgeInsets.fromLTRB(20, haut, 20, 0),
+    padding: EdgeInsets.fromLTRB(
+      PisteEspaces.marge,
+      haut,
+      PisteEspaces.marge,
+      0,
+    ),
     sliver: sliver,
   );
 }
 
-/// Carte arrondie : surface groupée sans bordure sur iOS, `Card` Material.
 class Carte extends StatelessWidget {
   const Carte({super.key, required this.child, this.padding});
 
@@ -34,10 +38,7 @@ class Carte extends StatelessWidget {
     if (estCupertino(context)) {
       final rayon = BorderRadius.circular(PisteRayons.ios);
       return DecoratedBox(
-        decoration: BoxDecoration(
-          color: couleurCarte(context),
-          borderRadius: rayon,
-        ),
+        decoration: decorationGroupee(context),
         child: ClipRRect(borderRadius: rayon, child: contenu),
       );
     }
@@ -45,17 +46,44 @@ class Carte extends StatelessWidget {
   }
 }
 
-/// Titre de section au-dessus d'un groupe de cartes.
+class CarteLignes extends StatelessWidget {
+  const CarteLignes({super.key, required this.children, this.retrait = 16});
+
+  final List<Widget> children;
+  final double retrait;
+
+  @override
+  Widget build(BuildContext context) {
+    final couleur = couleurTexteSecondaire(context).withValues(alpha: 0.2);
+    return Carte(
+      child: Column(
+        children: [
+          for (final (i, enfant) in children.indexed) ...[
+            if (i > 0) Divider(height: 1, indent: retrait, color: couleur),
+            enfant,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class TitreSection extends StatelessWidget {
-  const TitreSection(this.texte, {super.key, this.action});
+  const TitreSection(
+    this.texte, {
+    super.key,
+    this.action,
+    this.padding = const EdgeInsets.only(top: 32, bottom: 12),
+  });
 
   final String texte;
   final Widget? action;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 32, bottom: 12),
+      padding: padding,
       child: Row(
         children: [
           Expanded(
@@ -71,8 +99,6 @@ class TitreSection extends StatelessWidget {
   }
 }
 
-/// Action principale de l'écran : bouton Liquid Glass teinté sur iOS 26,
-/// `FilledButton` Material 3 sur Android.
 class BoutonPrincipal extends StatelessWidget {
   const BoutonPrincipal({
     super.key,
@@ -114,7 +140,37 @@ class BoutonPrincipal extends StatelessWidget {
   }
 }
 
-/// Contrôle segmenté : `UISegmentedControl` natif sur iOS, `SegmentedButton`.
+class BoutonTexte extends StatelessWidget {
+  const BoutonTexte({
+    super.key,
+    required this.libelle,
+    required this.onPressed,
+    this.semantique,
+  });
+
+  final String libelle;
+  final VoidCallback? onPressed;
+  final String? semantique;
+
+  @override
+  Widget build(BuildContext context) {
+    final bouton = estCupertino(context)
+        ? CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            minimumSize: const Size(44, 44),
+            onPressed: onPressed,
+            child: Text(libelle),
+          )
+        : TextButton(onPressed: onPressed, child: Text(libelle));
+    return Semantics(
+      label: semantique ?? libelle,
+      excludeSemantics: true,
+      button: true,
+      child: bouton,
+    );
+  }
+}
+
 class Segments<T extends Object> extends StatelessWidget {
   const Segments({
     super.key,
@@ -130,27 +186,23 @@ class Segments<T extends Object> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cles = options.keys.toList();
-    if (estCupertino(context)) {
-      return SizedBox(
-        width: double.infinity,
-        child: AdaptiveSegmentedControl(
-          labels: options.values.toList(),
-          selectedIndex: cles.indexOf(valeur),
-          onValueChanged: (i) => onChanged(cles[i]),
-        ),
-      );
-    }
     return SizedBox(
       width: double.infinity,
-      child: SegmentedButton<T>(
-        showSelectedIcon: false,
-        selected: {valeur},
-        onSelectionChanged: (s) => onChanged(s.first),
-        segments: [
-          for (final e in options.entries)
-            ButtonSegment(value: e.key, label: Text(e.value)),
-        ],
-      ),
+      child: estCupertino(context)
+          ? AdaptiveSegmentedControl(
+              labels: options.values.toList(),
+              selectedIndex: cles.indexOf(valeur),
+              onValueChanged: (i) => onChanged(cles[i]),
+            )
+          : SegmentedButton<T>(
+              showSelectedIcon: false,
+              selected: {valeur},
+              onSelectionChanged: (s) => onChanged(s.first),
+              segments: [
+                for (final e in options.entries)
+                  ButtonSegment(value: e.key, label: Text(e.value)),
+              ],
+            ),
     );
   }
 }

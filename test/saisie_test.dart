@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:piste/data/candidature_sqlite.dart';
 import 'package:piste/format/dates.dart';
 import 'package:piste/models/candidature.dart';
 import 'package:piste/models/saisie.dart';
@@ -102,7 +103,7 @@ void main() {
         telephone: '06 12 34 56 78',
       ),
     );
-    final relue = Candidature.fromDatabase(c.toDatabase());
+    final relue = CandidatureSqlite.depuisLigne(CandidatureSqlite.versLigne(c));
     expect(
       relue.contact,
       const Contact(nom: 'Camille', email: 'c@x.fr', telephone: '0612345678'),
@@ -110,7 +111,7 @@ void main() {
   });
 
   test('une ligne V2 sans colonnes de contact se lit', () {
-    final relue = Candidature.fromDatabase({
+    final relue = CandidatureSqlite.depuisLigne({
       'id': 1,
       'entreprise': 'Nexora',
       'poste': 'Dev',

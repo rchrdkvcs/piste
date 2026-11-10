@@ -1,7 +1,3 @@
-// Génère les images sources des icônes à partir de `LogoPiste`.
-//
-//   flutter test tool/generer_icones_test.dart
-//   dart run flutter_launcher_icons
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -25,9 +21,7 @@ Future<void> exporter(String nom, PeintreLogoPiste peintre) async {
 
 void main() {
   test('exporter les icônes', () async {
-    // iOS clair et icône de base : dégradé plein cadre.
     await exporter('icone', const PeintreLogoPiste(arrondi: false));
-    // iOS sombre : fond transparent, tracé turquoise.
     await exporter(
       'icone_ios_sombre',
       const PeintreLogoPiste(
@@ -35,9 +29,7 @@ void main() {
         couleurTrace: PisteCouleurs.turquoise,
       ),
     );
-    // iOS teinté : niveaux de gris sur fond transparent.
     await exporter('icone_ios_teinte', const PeintreLogoPiste(fond: false));
-    // Android adaptatif : tracé dans la zone sûre (66 %), fond séparé.
     await exporter(
       'icone_android_premier_plan',
       const PeintreLogoPiste(fond: false, echelle: 0.62),

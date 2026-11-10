@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -31,7 +30,6 @@ Future<void> preparerFormats() async {
   await initializeDateFormatting('fr_FR');
 }
 
-/// Racine de l'application : propriétaire du contrôleur et du repository.
 class PisteApp extends StatefulWidget {
   const PisteApp({
     super.key,
@@ -42,7 +40,6 @@ class PisteApp extends StatefulWidget {
 
   final CandidatureRepository repository;
 
-  /// Onglet affiché au lancement (0 : Accueil).
   final int ongletInitial;
   final PreferencesController preferences;
 
@@ -80,14 +77,7 @@ class _PisteAppState extends State<PisteApp> {
         locale: const Locale('fr', 'FR'),
         supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        // Les écrans iOS n'ont pas de `Material` parent : on leur donne le
-        // style de texte système Cupertino (SF Pro, couleur label dynamique).
-        builder: (context, child) => estCupertino(context)
-            ? DefaultTextStyle(
-                style: CupertinoTheme.of(context).textTheme.textStyle,
-                child: child!,
-              )
-            : child!,
+        builder: (context, child) => TexteSysteme(child: child!),
         home: PisteShell(
           controller: controller,
           preferences: widget.preferences,

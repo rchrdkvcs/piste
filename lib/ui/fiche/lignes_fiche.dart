@@ -4,16 +4,17 @@ import 'package:flutter/material.dart';
 import '../../format/dates.dart';
 import '../../models/candidature.dart';
 import '../../models/saisie.dart';
-import '../../theme/statut_couleurs.dart';
 import '../adaptive/adaptive.dart';
 
-/// Ouvre une adresse externe ; le message s'affiche si c'est impossible.
 typedef OuvrirExterne = void Function(Uri uri, String erreur);
 
-/// Lignes « Suivi » de la fiche : envoi, relance, annonce.
-List<LigneListe> lignesSuivi(Candidature c, {required OuvrirExterne ouvrir}) {
+List<LigneListe> lignesSuivi(
+  Candidature c, {
+  required OuvrirExterne ouvrir,
+  required DateTime maintenant,
+}) {
   final relance = c.prochaineRelance;
-  final enRetard = c.aRelancer(DateTime.now());
+  final enRetard = c.aRelancer(maintenant);
   return [
     if (c.dateEnvoi != null)
       LigneListe(
@@ -21,22 +22,22 @@ List<LigneListe> lignesSuivi(Candidature c, {required OuvrirExterne ouvrir}) {
         detail: dateLongue(c.dateEnvoi!),
         iconeMaterial: Icons.send_outlined,
         iconeCupertino: CupertinoIcons.paperplane_fill,
-        couleurIcone: Statut.envoyee.couleur,
+        teinte: TeinteIcone.indigo,
       ),
     if (relance != null)
       LigneListe(
-        titre: 'Relance prévue le',
+        titre: 'Prochaine relance',
         detail: dateLongue(relance),
         sousTitre: c.statut.estClos
             ? null
             : enRetard
-            ? 'À faire (${echeanceRelative(relance)})'
-            : echeanceRelative(relance),
+            ? 'À faire (${echeanceRelative(relance, maintenant)})'
+            : echeanceRelative(relance, maintenant),
         iconeMaterial: enRetard
             ? Icons.notification_important_outlined
             : Icons.notifications_none,
         iconeCupertino: CupertinoIcons.bell_fill,
-        couleurIcone: enRetard ? Statut.refusee.couleur : Statut.offre.couleur,
+        teinte: enRetard ? TeinteIcone.rouge : TeinteIcone.orange,
       ),
     if (c.lienAnnonce.isNotEmpty)
       LigneListe(
@@ -44,7 +45,7 @@ List<LigneListe> lignesSuivi(Candidature c, {required OuvrirExterne ouvrir}) {
         sousTitre: _hote(c.lienAnnonce),
         iconeMaterial: Icons.open_in_new,
         iconeCupertino: CupertinoIcons.link,
-        couleurIcone: Statut.enCours.couleur,
+        teinte: TeinteIcone.sarcelle,
         onTap: () => ouvrir(
           Uri.parse(Saisie.normaliserLien(c.lienAnnonce)),
           'Vérifie l’adresse de l’annonce : ${c.lienAnnonce}',
@@ -53,8 +54,6 @@ List<LigneListe> lignesSuivi(Candidature c, {required OuvrirExterne ouvrir}) {
   ];
 }
 
-/// Lignes « Contact » de la fiche : e-mail et téléphone ouvrent
-/// l'application dédiée.
 List<LigneListe> lignesContact(Candidature c, {required OuvrirExterne ouvrir}) {
   final contact = c.contact;
   return [
@@ -63,7 +62,7 @@ List<LigneListe> lignesContact(Candidature c, {required OuvrirExterne ouvrir}) {
         titre: contact.nom,
         iconeMaterial: Icons.person_outline,
         iconeCupertino: CupertinoIcons.person_fill,
-        couleurIcone: CupertinoColors.systemGrey,
+        teinte: TeinteIcone.gris,
       ),
     if (contact.email.isNotEmpty)
       LigneListe(
@@ -71,7 +70,7 @@ List<LigneListe> lignesContact(Candidature c, {required OuvrirExterne ouvrir}) {
         sousTitre: contact.email,
         iconeMaterial: Icons.mail_outline,
         iconeCupertino: CupertinoIcons.mail_solid,
-        couleurIcone: CupertinoColors.systemBlue,
+        teinte: TeinteIcone.bleu,
         onTap: () => ouvrir(
           Uri(scheme: 'mailto', path: contact.email),
           'Aucune application de messagerie ne peut écrire à '
@@ -84,7 +83,7 @@ List<LigneListe> lignesContact(Candidature c, {required OuvrirExterne ouvrir}) {
         sousTitre: Saisie.formaterTelephone(contact.telephone),
         iconeMaterial: Icons.phone_outlined,
         iconeCupertino: CupertinoIcons.phone_fill,
-        couleurIcone: CupertinoColors.systemGreen,
+        teinte: TeinteIcone.vert,
         onTap: () => ouvrir(
           Uri(scheme: 'tel', path: contact.telephone),
           'Cet appareil ne peut pas appeler le '
@@ -94,7 +93,6 @@ List<LigneListe> lignesContact(Candidature c, {required OuvrirExterne ouvrir}) {
   ];
 }
 
-/// Hôte affichable d'un lien (`www.` retiré), ou le lien brut.
 String _hote(String lien) {
   final hote = Uri.tryParse(lien)?.host ?? '';
   if (hote.isEmpty) return lien;

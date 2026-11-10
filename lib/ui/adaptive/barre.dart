@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 
 import 'plateforme.dart';
 
-/// Option d'un menu de barre : `UIMenu` natif sur iOS 26, `PopupMenuButton`
-/// sur Android.
 class OptionMenu {
   const OptionMenu({
     required this.libelle,
@@ -19,8 +17,18 @@ class OptionMenu {
   final bool destructive;
 }
 
-/// Action de la barre de navigation, décrite une fois pour les deux
-/// plateformes.
+class ActionPrincipale {
+  const ActionPrincipale({
+    required this.libelle,
+    required this.libelleCourt,
+    required this.onPressed,
+  });
+
+  final String libelle;
+  final String libelleCourt;
+  final VoidCallback onPressed;
+}
+
 class ActionBarre {
   const ActionBarre({
     required this.libelle,
@@ -32,27 +40,17 @@ class ActionBarre {
     this.onPressed,
     this.menu,
     this.onMenu,
-    this.seulementIos = false,
   }) : assert((menu == null) == (onMenu == null));
 
-  /// Action déjà portée sur Android par un autre composant (bouton
-  /// flottant, chips de filtre) : elle n'apparaît que dans la barre iOS.
-  final bool seulementIos;
-
-  /// Nom lu par VoiceOver / TalkBack et info-bulle Android.
   final String libelle;
 
-  /// SF Symbol (iOS 26+).
   final String? symbole;
   final IconData? iconeMaterial;
 
-  /// Icône iOS 18 et moins.
   final IconData? iconeCupertino;
 
-  /// Affiche le libellé au lieu d'une icône (« Modifier »).
   final bool texte;
 
-  /// Bulle teintée Liquid Glass (iOS 26).
   final bool principale;
   final VoidCallback? onPressed;
   final List<OptionMenu>? menu;

@@ -1,7 +1,5 @@
 import '../models/candidature.dart';
 
-/// Chiffres de synthèse calculés sur toutes les candidatures, jamais sur la
-/// liste filtrée. Fonction pure de la liste : aucune dépendance à Flutter.
 class Indicateurs {
   Indicateurs.depuis(List<Candidature> candidatures)
     : total = candidatures.length,
@@ -16,14 +14,10 @@ class Indicateurs {
   final int total;
   final Map<Statut, int> parStatut;
 
-  /// Nombre de candidatures par entreprise, de la plus fréquente à la moins.
-  /// « Google » et « google » comptent pour la même entreprise ; le nom
-  /// affiché est celui de la candidature la plus récente.
   final List<MapEntry<String, int>> parEntreprise;
 
   int compter(Statut statut) => parStatut[statut] ?? 0;
 
-  /// Proportion d'un statut, 0 si aucune candidature (pas de division par 0).
   double proportion(Statut statut) => total == 0 ? 0 : compter(statut) / total;
 
   static List<MapEntry<String, int>> _parEntreprise(List<Candidature> liste) {

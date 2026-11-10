@@ -34,8 +34,8 @@ void main() {
       ..rechercher('  google ');
 
     expect(controller.visibles.map((c) => c.entreprise), ['Google']);
-    expect(controller.total, 3);
-    expect(controller.compter(Statut.entretien), 2);
+    expect(controller.indicateurs.total, 3);
+    expect(controller.indicateurs.compter(Statut.entretien), 2);
     controller.dispose();
   });
 
@@ -45,7 +45,7 @@ void main() {
       final controller = CandidatureController(FakeCandidatureRepository());
       await controller.charger();
 
-      expect(controller.proportion(Statut.offre), 0);
+      expect(controller.indicateurs.proportion(Statut.offre), 0);
       controller.dispose();
     },
   );
@@ -76,7 +76,7 @@ void main() {
     repo.echecEcriture = true;
     await expectLater(controller.supprimer(1), throwsException);
 
-    expect(controller.total, 1);
+    expect(controller.indicateurs.total, 1);
     expect(controller.occupe, isFalse);
     controller.dispose();
   });
@@ -91,11 +91,11 @@ void main() {
     final n = await controller.importer(exemples);
 
     expect(n, exemples.length);
-    expect(controller.total, exemples.length + 1);
+    expect(controller.indicateurs.total, exemples.length + 1);
     expect(controller.parId(1), isNotNull);
     expect(controller.aRelancer(maintenant), isNotEmpty);
     for (final s in Statut.values) {
-      expect(controller.compter(s), greaterThan(0), reason: s.name);
+      expect(controller.indicateurs.compter(s), greaterThan(0), reason: s.name);
     }
     controller.dispose();
   });

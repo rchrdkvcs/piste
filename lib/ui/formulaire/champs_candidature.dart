@@ -5,8 +5,12 @@ import '../../format/dates.dart';
 import '../../models/candidature.dart';
 import '../../models/saisie.dart';
 
-/// Champs du formulaire de candidature : contrôleurs de texte, focus,
-/// statut et dates. Partagé par les vues iOS et Android.
+typedef BornesDate = ({
+  DateTime? initiale,
+  DateTime? premiere,
+  DateTime? derniere,
+});
+
 class ChampsCandidature {
   ChampsCandidature(this.initiale)
     : entreprise = TextEditingController(text: initiale?.entreprise),
@@ -26,7 +30,6 @@ class ChampsCandidature {
     _depart = lire(DateTime(0));
   }
 
-  /// Candidature modifiée, ou `null` pour une création.
   final Candidature? initiale;
 
   final TextEditingController entreprise;
@@ -46,22 +49,13 @@ class ChampsCandidature {
   DateTime? dateEnvoi;
   DateTime? relance;
 
-  /// Instantané de départ : sert à savoir s'il y a des changements à perdre.
   late final Candidature _depart;
 
-  static const validerEntreprise = ReglesCandidature.entreprise;
-  static const validerPoste = ReglesCandidature.poste;
-  static const validerLien = ReglesCandidature.lienAnnonce;
-  static const validerEmail = ReglesCandidature.email;
-  static const validerTelephone = ReglesCandidature.telephone;
-
-  /// Saisie du téléphone : chiffres, espaces, `+ . - ( )` uniquement.
   static final filtreTelephone = [
     FilteringTextInputFormatter.allow(Saisie.caracteresTelephone),
     LengthLimitingTextInputFormatter(20),
   ];
 
-  /// Candidature telle que saisie, champs nettoyés.
   Candidature lire(DateTime maintenant) => Candidature(
     id: initiale?.id,
     entreprise: entreprise.text.trim(),
@@ -80,47 +74,47 @@ class ChampsCandidature {
     dateModification: maintenant,
   );
 
-  bool get modifie {
-    final a = lire(DateTime(0));
-    final b = _depart;
-    return a.entreprise != b.entreprise ||
-        a.poste != b.poste ||
-        a.statut != b.statut ||
-        a.notes != b.notes ||
-        a.lienAnnonce != b.lienAnnonce ||
-        a.contact != b.contact ||
-        a.dateEnvoi != b.dateEnvoi ||
-        a.prochaineRelance != b.prochaineRelance;
-  }
+  bool get modifie => !lire(DateTime(0)).memeContenu(_depart);
 
-  /// Place le focus sur le premier champ en erreur pour que le lecteur
-  /// d'écran l'annonce et que le clavier s'ouvre au bon endroit.
   void focaliserPremiereErreur() {
     final controles = [
-      (entreprise, validerEntreprise, focusEntreprise),
-      (poste, validerPoste, focusPoste),
-      (lien, validerLien, focusLien),
-      (contactEmail, validerEmail, focusEmail),
-      (contactTelephone, validerTelephone, focusTelephone),
+      (entreprise, ReglesCandidature.entreprise, focusEntreprise),
+      (poste, ReglesCandidature.poste, focusPoste),
+      (lien, ReglesCandidature.lienAnnonce, focusLien),
+      (contactEmail, ReglesCandidature.email, focusEmail),
+      (contactTelephone, ReglesCandidature.telephone, focusTelephone),
     ];
     for (final (champ, valider, focus) in controles) {
       if (valider(champ.text) != null) return focus.requestFocus();
     }
   }
 
-  /// Nouvelle date d'envoi : une relance devenue antérieure est effacée.
   void changerDateEnvoi(DateTime? date) {
     dateEnvoi = date;
     final r = relance;
     if (date != null && r != null && r.isBefore(date)) relance = null;
   }
 
-  /// Relance proposée par défaut : une semaine après l'envoi (ou après
-  /// aujourd'hui), jamais dans le passé.
-  DateTime suggestionRelance() {
-    final jour = aujourdhui();
+  DateTime suggestionRelance([DateTime? maintenant]) {
+    final jour = aujourdhui(maintenant);
     final suggestion = (dateEnvoi ?? jour).add(const Duration(days: 7));
     return suggestion.isBefore(jour) ? jour : suggestion;
+  }
+
+  BornesDate bornes({required bool relance, DateTime? maintenant}) => relance
+      ? (
+          initiale: this.relance ?? suggestionRelance(maintenant),
+          premiere: dateEnvoi,
+          derniere: null,
+        )
+      : (initiale: dateEnvoi, premiere: null, derniere: aujourdhui(maintenant));
+
+  void appliquerDate(DateTime? date, {required bool relance}) {
+    if (relance) {
+      this.relance = date;
+    } else {
+      changerDateEnvoi(date);
+    }
   }
 
   void dispose() {

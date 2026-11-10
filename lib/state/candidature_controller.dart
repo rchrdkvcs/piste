@@ -7,10 +7,6 @@ import 'indicateurs.dart';
 
 enum EtatChargement { chargement, pret, vide, erreur }
 
-/// Source de vérité des candidatures, partagée par tous les écrans.
-///
-/// Créé une seule fois par la racine de l'application ; les pages reçoivent
-/// la même instance et l'écoutent avec un `ListenableBuilder`.
 class CandidatureController extends ChangeNotifier {
   CandidatureController(this.repository);
 
@@ -25,14 +21,13 @@ class CandidatureController extends ChangeNotifier {
   bool _libere = false;
 
   EtatChargement get etat => _etat;
+  bool get lisible =>
+      _etat == EtatChargement.pret || _etat == EtatChargement.vide;
   List<Candidature> get candidatures => List.unmodifiable(_candidatures);
   String get recherche => _recherche;
   Statut? get filtre => _filtre;
   bool get occupe => _occupe;
 
-  /// Candidatures après recherche texte et filtre de statut combinés.
-  /// La recherche ignore casse et accents, et porte sur l'entreprise, le
-  /// poste et le nom du contact.
   List<Candidature> get visibles {
     final query = Saisie.pourRecherche(_recherche);
     return _candidatures
@@ -47,15 +42,8 @@ class CandidatureController extends ChangeNotifier {
         .toList(growable: false);
   }
 
-  // --- Indicateurs : toujours calculés sur la liste complète. -------------
+  Indicateurs get indicateurs => _indicateurs;
 
-  int get total => _indicateurs.total;
-  int compter(Statut statut) => _indicateurs.compter(statut);
-  double proportion(Statut statut) => _indicateurs.proportion(statut);
-  List<MapEntry<String, int>> get parEntreprise => _indicateurs.parEntreprise;
-
-  /// Candidatures dont la relance est due ou dépassée, la plus ancienne
-  /// d'abord.
   List<Candidature> aRelancer([DateTime? maintenant]) {
     final jour = maintenant ?? DateTime.now();
     return _candidatures.where((c) => c.aRelancer(jour)).toList()
@@ -68,8 +56,6 @@ class CandidatureController extends ChangeNotifier {
     }
     return null;
   }
-
-  // --- Recherche et filtre -------------------------------------------------
 
   void rechercher(String texte) {
     if (texte == _recherche) return;
@@ -89,12 +75,6 @@ class CandidatureController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Lecture et écriture -------------------------------------------------
-
-  /// Lit toutes les candidatures. Une erreur donne l'état [EtatChargement.erreur] :
-  /// on n'affiche jamais une liste vide ou ancienne comme si la lecture avait réussi.
-  ///
-  /// [silencieux] évite de repasser par l'état loading après une écriture.
   Future<void> charger({bool silencieux = false}) async {
     if (!silencieux) {
       _etat = EtatChargement.chargement;
@@ -112,8 +92,6 @@ class CandidatureController extends ChangeNotifier {
     _notifier();
   }
 
-  /// Enregistre puis relit la base. L'exception remonte à l'écran appelant
-  /// pour qu'il garde les champs saisis et affiche l'erreur.
   Future<Candidature> enregistrer(Candidature candidature) {
     return _operation(() async {
       final enregistree = await repository.enregistrer(candidature);
@@ -122,13 +100,9 @@ class CandidatureController extends ChangeNotifier {
     });
   }
 
-  /// Ajoute [candidatures] à celles existantes (jeu de démonstration),
-  /// puis relit la base. Renvoie le nombre de candidatures ajoutées.
   Future<int> importer(List<Candidature> candidatures) {
     return _operation(() async {
-      for (final c in candidatures) {
-        await repository.enregistrer(c);
-      }
+      await repository.enregistrerTous(candidatures);
       await charger(silencieux: true);
       return candidatures.length;
     });
@@ -141,7 +115,6 @@ class CandidatureController extends ChangeNotifier {
     });
   }
 
-  /// Bloque deux écritures simultanées (double appui, deux écrans…).
   Future<T> _operation<T>(Future<T> Function() action) async {
     if (_occupe) {
       throw StateError('Une opération est déjà en cours.');

@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-/// Initiale de l'entreprise sur une teinte stable dérivée de son nom.
-/// Décorative : le nom est déjà lu à côté.
+import 'avatar.dart';
+
 class AvatarEntreprise extends StatelessWidget {
   const AvatarEntreprise(this.entreprise, {super.key, this.taille = 44});
 
@@ -19,8 +18,6 @@ class AvatarEntreprise extends StatelessWidget {
     Color(0xFF0EA5E9),
   ];
 
-  /// Empreinte stable d'une exécution à l'autre (FNV-1a), contrairement à
-  /// `String.hashCode` : une entreprise garde toujours la même teinte.
   static int _empreinte(String texte) {
     var h = 0x811C9DC5;
     for (final unite in texte.codeUnits) {
@@ -31,27 +28,11 @@ class AvatarEntreprise extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nom = entreprise.trim();
-    final couleur = _teintes[_empreinte(nom.toLowerCase()) % _teintes.length];
-    return ExcludeSemantics(
-      child: Container(
-        width: taille,
-        height: taille,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: couleur.withValues(alpha: 0.14),
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          nom.isEmpty ? '?' : nom.characters.first.toUpperCase(),
-          textScaler: TextScaler.noScaling,
-          style: TextStyle(
-            color: couleur,
-            fontSize: taille * 0.42,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
+    final cle = entreprise.trim().toLowerCase();
+    return AvatarInitiales(
+      texte: entreprise,
+      couleur: _teintes[_empreinte(cle) % _teintes.length],
+      taille: taille,
     );
   }
 }

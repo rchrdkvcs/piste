@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../models/candidature.dart';
+import '../../theme/app_theme.dart';
 import '../../theme/statut_couleurs.dart';
-import '../../theme/typo.dart';
+import '../adaptive/adaptive.dart';
+import '../widgets/avatar_entreprise.dart';
 
-/// Statut, nombre, pourcentage et barre de proportion.
 class LigneRepartition extends StatelessWidget {
   const LigneRepartition({
     super.key,
@@ -72,7 +73,6 @@ class LigneRepartition extends StatelessWidget {
   }
 }
 
-/// Barre horizontale décorative (la valeur est lue par la ligne).
 class BarreProportion extends StatelessWidget {
   const BarreProportion({
     super.key,
@@ -92,7 +92,50 @@ class BarreProportion extends StatelessWidget {
           value: valeur,
           minHeight: 6,
           color: couleur,
-          backgroundColor: couleur.withValues(alpha: 0.14),
+          backgroundColor: teinteDouce(couleur),
+        ),
+      ),
+    );
+  }
+}
+
+class LigneEntreprise extends StatelessWidget {
+  const LigneEntreprise({
+    super.key,
+    required this.nom,
+    required this.nombre,
+    required this.maximum,
+  });
+
+  final String nom;
+  final int nombre;
+  final int maximum;
+
+  @override
+  Widget build(BuildContext context) {
+    return MergeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          children: [
+            AvatarEntreprise(nom, taille: 36),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(nom, style: Typo.corpsGras(context)),
+                  const SizedBox(height: 6),
+                  BarreProportion(
+                    valeur: nombre / maximum,
+                    couleur: couleurAccent(context),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text('$nombre', style: Typo.chiffre(context, taille: 17)),
+          ],
         ),
       ),
     );

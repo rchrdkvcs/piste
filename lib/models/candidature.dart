@@ -1,10 +1,6 @@
+import '../format/dates.dart';
 import 'saisie.dart';
 
-/// Étapes possibles d'une candidature.
-///
-/// Le nom de la valeur (`name`) est celui stocké en base : ne pas le renommer
-/// sans prévoir de migration. Les couleurs vivent dans `theme/` : le modèle
-/// ne dépend pas de l'interface.
 enum Statut {
   envoyee('Envoyée', 'Envoyées'),
   enCours('En cours', 'En cours'),
@@ -17,11 +13,8 @@ enum Statut {
   final String libelle;
   final String libellePluriel;
 
-  /// Une candidature refusée est close : plus rien à relancer.
   bool get estClos => this == Statut.refusee;
 
-  /// Lit un statut stocké. Une valeur inconnue (ancienne version, donnée
-  /// corrompue) retombe sur [Statut.envoyee] au lieu de faire planter l'app.
   static Statut depuisNom(String? nom) {
     for (final statut in values) {
       if (statut.name == nom) return statut;
@@ -30,8 +23,6 @@ enum Statut {
   }
 }
 
-/// Personne à contacter dans l'entreprise. Tous les champs sont facultatifs ;
-/// l'e-mail et le téléphone sont stockés normalisés.
 class Contact {
   const Contact({this.nom = '', this.email = '', this.telephone = ''});
 
@@ -41,8 +32,6 @@ class Contact {
   final String email;
   final String telephone;
 
-  /// Contact prêt à enregistrer : espaces retirés, e-mail en minuscules,
-  /// téléphone réduit à ses chiffres (et `+` initial).
   factory Contact.saisi({
     String nom = '',
     String email = '',
@@ -81,14 +70,12 @@ class Candidature {
     required this.dateModification,
   });
 
-  /// `null` tant que la candidature n'a pas été enregistrée.
   final int? id;
   final String entreprise;
   final String poste;
   final Statut statut;
   final String notes;
 
-  /// Adresse de l'annonce publiée par l'entreprise, vide si inconnue.
   final String lienAnnonce;
   final Contact contact;
   final DateTime? dateEnvoi;
@@ -96,21 +83,14 @@ class Candidature {
   final DateTime dateCreation;
   final DateTime dateModification;
 
-  /// Clé d'une entreprise : sans casse ni espaces autour. « Google » et
-  /// « google » sont la même entreprise.
   static String cleEntreprise(String nom) => nom.trim().toLowerCase();
 
-  /// Vrai si la relance est prévue aujourd'hui ou est dépassée, et que la
-  /// candidature n'est pas close.
   bool aRelancer(DateTime aujourdhui) {
     final relance = prochaineRelance;
     if (relance == null || statut.estClos) return false;
-    final jour = DateTime(aujourdhui.year, aujourdhui.month, aujourdhui.day);
-    return !DateTime(relance.year, relance.month, relance.day).isAfter(jour);
+    return !sansHeure(relance).isAfter(sansHeure(aujourdhui));
   }
 
-  /// Les dates facultatives se passent sous forme de fonction pour pouvoir
-  /// être remises à `null` : `copyWith(prochaineRelance: () => null)`.
   Candidature copyWith({
     int? id,
     String? entreprise,
@@ -141,54 +121,17 @@ class Candidature {
     );
   }
 
-  /// Les noms de colonnes historiques (`status`, `url`, `date_candidature`)
-  /// sont conservés : les renommer imposerait de reconstruire la table.
-  Map<String, Object?> toDatabase() {
-    return {
-      if (id != null) 'id': id,
-      'entreprise': entreprise,
-      'poste': poste,
-      'status': statut.name,
-      'notes': notes,
-      'url': lienAnnonce,
-      'contact_nom': contact.nom,
-      'contact_email': contact.email,
-      'contact_telephone': contact.telephone,
-      'date_candidature': dateEnvoi?.toIso8601String(),
-      'prochaine_relance': prochaineRelance?.toIso8601String(),
-      'date_creation': dateCreation.toIso8601String(),
-      'date_modification': dateModification.toIso8601String(),
-    };
-  }
-
-  factory Candidature.fromDatabase(Map<String, Object?> ligne) {
-    final creation =
-        _date(ligne['date_creation']) ?? DateTime.fromMillisecondsSinceEpoch(0);
-    return Candidature(
-      id: ligne['id'] as int?,
-      entreprise: ligne['entreprise'] as String? ?? '',
-      poste: ligne['poste'] as String? ?? '',
-      statut: Statut.depuisNom(ligne['status'] as String?),
-      notes: ligne['notes'] as String? ?? '',
-      lienAnnonce: ligne['url'] as String? ?? '',
-      contact: Contact(
-        nom: ligne['contact_nom'] as String? ?? '',
-        email: ligne['contact_email'] as String? ?? '',
-        telephone: ligne['contact_telephone'] as String? ?? '',
-      ),
-      dateEnvoi: _date(ligne['date_candidature']),
-      prochaineRelance: _date(ligne['prochaine_relance']),
-      dateCreation: creation,
-      dateModification: _date(ligne['date_modification']) ?? creation,
-    );
-  }
-
-  static DateTime? _date(Object? valeur) =>
-      valeur is String && valeur.isNotEmpty ? DateTime.tryParse(valeur) : null;
+  bool memeContenu(Candidature autre) =>
+      entreprise == autre.entreprise &&
+      poste == autre.poste &&
+      statut == autre.statut &&
+      notes == autre.notes &&
+      lienAnnonce == autre.lienAnnonce &&
+      contact == autre.contact &&
+      dateEnvoi == autre.dateEnvoi &&
+      prochaineRelance == autre.prochaineRelance;
 }
 
-/// Règles de saisie d'une candidature : message d'erreur, ou `null` si la
-/// valeur est acceptable. Le formulaire les affiche sous chaque champ.
 abstract final class ReglesCandidature {
   static String? entreprise(String? v) =>
       (v ?? '').trim().isEmpty ? 'Indique le nom de l’entreprise.' : null;

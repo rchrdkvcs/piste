@@ -1,16 +1,16 @@
-/// Couche d'adaptation : chaque écran décrit son contenu une fois, et ces
-/// composants choisissent le natif de la plateforme.
-///
-/// - iOS 26+ : composants UIKit Liquid Glass via `adaptive_platform_ui`.
-/// - iOS 18 et moins : équivalents Cupertino.
-/// - Android : Material 3.
-library;
-
 export 'barre.dart';
+export 'champs.dart';
 export 'dialogues.dart';
 export 'elements.dart';
+export 'filtre.dart';
 export 'listes.dart';
 export 'messages.dart';
 export 'navigation.dart';
+export 'onglets.dart';
 export 'page.dart';
 export 'plateforme.dart';
+export 'recherche.dart';
+export 'saisie.dart';
+export 'selecteurs.dart';
+export 'suppression.dart';
+export 'typo.dart';

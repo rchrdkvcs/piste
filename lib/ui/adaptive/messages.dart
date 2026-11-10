@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 
 import 'plateforme.dart';
 
-/// Message de réussite : SnackBar sur Android, bannière flottante sur iOS.
 void afficherInfo(BuildContext context, String message) {
   if (!estCupertino(context)) {
     ScaffoldMessenger.maybeOf(context)
@@ -27,7 +26,6 @@ void afficherInfo(BuildContext context, String message) {
   overlay.insert(entree);
 }
 
-/// Message d'erreur : SnackBar sur Android, alerte native sur iOS.
 Future<void> afficherErreur(
   BuildContext context, {
   required String titre,
@@ -56,6 +54,25 @@ Future<void> afficherErreur(
     message: message,
     actions: [AlertAction(title: 'OK', onPressed: () {})],
   );
+}
+
+Future<bool> executerAvecRetour(
+  BuildContext context,
+  Future<void> Function() action, {
+  required String succes,
+  required String titreErreur,
+  required String messageErreur,
+}) async {
+  try {
+    await action();
+    if (context.mounted) afficherInfo(context, succes);
+    return true;
+  } catch (_) {
+    if (context.mounted) {
+      await afficherErreur(context, titre: titreErreur, message: messageErreur);
+    }
+    return false;
+  }
 }
 
 class _BanniereIos extends StatefulWidget {
@@ -101,7 +118,6 @@ class _BanniereIosState extends State<_BanniereIos>
       curve: Curves.easeOut,
       reverseCurve: Curves.easeOut,
     );
-    // Mouvement réduit : fondu seul, sans glissement.
     final decalage = mouvementReduit(context) ? 0.0 : -12.0;
     return Positioned(
       top: MediaQuery.paddingOf(context).top + 8,

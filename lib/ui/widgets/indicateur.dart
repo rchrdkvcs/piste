@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/typo.dart';
 import '../adaptive/adaptive.dart';
 
-/// Indicateur chiffré du tableau de bord.
 class Indicateur extends StatelessWidget {
   const Indicateur({
     super.key,
@@ -31,8 +29,6 @@ class Indicateur extends StatelessWidget {
             const SizedBox(height: 12),
             Text('$valeur', style: Typo.chiffre(context)),
             const SizedBox(height: 2),
-            // Pas de troncature : le libellé passe à la ligne si le texte
-            // est agrandi dans les réglages.
             Text(libelle, style: Typo.legende(context)),
           ],
         ),

@@ -4,16 +4,12 @@ import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/typo.dart';
+import '../../theme/app_theme.dart';
 import 'barre.dart';
+import 'filtre.dart';
 import 'plateforme.dart';
+import 'typo.dart';
 
-/// Page défilante avec la barre native de chaque plateforme.
-///
-/// iOS : barre d'outils Liquid Glass (`AdaptiveScaffold`). Le grand titre
-/// défile avec le contenu et passe dans la barre une fois recouvert, comme
-/// dans les apps Apple.
-/// Android : `SliverAppBar.medium` Material 3.
 class AdaptivePage extends StatefulWidget {
   const AdaptivePage({
     super.key,
@@ -22,7 +18,9 @@ class AdaptivePage extends StatefulWidget {
     this.grandTitre = true,
     this.titreDiffere = false,
     this.actions = const [],
-    this.boutonFlottant,
+    this.actionPrincipale,
+    this.filtre,
+    this.entete = const [],
     this.surActualisation,
   });
 
@@ -30,15 +28,12 @@ class AdaptivePage extends StatefulWidget {
   final List<Widget> slivers;
   final bool grandTitre;
 
-  /// iOS : le titre n'apparaît dans la barre qu'une fois l'en-tête de la
-  /// page recouvert (fiche dont l'en-tête affiche déjà le nom).
   final bool titreDiffere;
   final List<ActionBarre> actions;
+  final ActionPrincipale? actionPrincipale;
+  final Filtre<Object>? filtre;
+  final List<Widget> entete;
 
-  /// Bouton flottant Android. Sur iOS, l'action se place dans la barre.
-  final Widget? boutonFlottant;
-
-  /// Tirer pour actualiser, avec le contrôle natif de chaque plateforme.
   final Future<void> Function()? surActualisation;
 
   @override
@@ -46,10 +41,8 @@ class AdaptivePage extends StatefulWidget {
 }
 
 class _AdaptivePageState extends State<AdaptivePage> {
-  /// Défilement au-delà duquel le grand titre est recouvert par la barre.
   static const _seuilTitre = 44.0;
 
-  /// Hauteur de la barre d'outils iOS (UIKit et Cupertino : 44 pt).
   static const _hauteurBarre = 44.0;
   bool _titreReplie = false;
 
@@ -58,13 +51,45 @@ class _AdaptivePageState extends State<AdaptivePage> {
 
   bool _surDefilement(ScrollNotification n) {
     if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
-    // Position bornée : le rebond en bas de page ne compte pas comme un
-    // défilement (sinon le titre apparaîtrait en double).
     final m = n.metrics;
     final position = m.pixels.clamp(m.minScrollExtent, m.maxScrollExtent);
     final replie = position > _seuilTitre;
     if (replie != _titreReplie) setState(() => _titreReplie = replie);
     return false;
+  }
+
+  List<ActionBarre> get _actionsIos {
+    final principale = widget.actionPrincipale;
+    return [
+      ...widget.actions,
+      ?widget.filtre?.actionIos(),
+      if (principale != null)
+        ActionBarre(
+          libelle: principale.libelle,
+          symbole: 'plus',
+          iconeCupertino: CupertinoIcons.add,
+          principale: true,
+          onPressed: principale.onPressed,
+        ),
+    ];
+  }
+
+  List<Widget> _contenu(BuildContext context) => [
+    ...widget.entete,
+    ?widget.filtre?.sliver(context),
+    ...widget.slivers,
+  ];
+
+  Widget? _boutonFlottant() {
+    final principale = widget.actionPrincipale;
+    if (principale == null) return null;
+    return FloatingActionButton.extended(
+      heroTag: widget.titre,
+      tooltip: principale.libelle,
+      onPressed: principale.onPressed,
+      icon: const Icon(Icons.add),
+      label: Text(principale.libelleCourt),
+    );
   }
 
   @override
@@ -84,7 +109,7 @@ class _AdaptivePageState extends State<AdaptivePage> {
       appBar: AdaptiveAppBar(
         useNativeToolbar: true,
         title: titreBarre,
-        actions: [for (final a in widget.actions) a.versIos(context)],
+        actions: [for (final a in _actionsIos) a.versIos(context)],
       ),
       body: NotificationListener<ScrollNotification>(
         onNotification: _surDefilement,
@@ -93,9 +118,6 @@ class _AdaptivePageState extends State<AdaptivePage> {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            // Hauteur fixe (barre d'état + barre d'outils) : la barre
-            // n'apparaît qu'une fois le grand titre recouvert, et ce
-            // réservé constant évite que le contenu saute à ce moment-là.
             SliverToBoxAdapter(
               child: SizedBox(
                 height: MediaQuery.viewPaddingOf(context).top + _hauteurBarre,
@@ -105,7 +127,12 @@ class _AdaptivePageState extends State<AdaptivePage> {
               CupertinoSliverRefreshControl(onRefresh: rafraichir),
             if (widget.grandTitre)
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  PisteEspaces.marge,
+                  4,
+                  PisteEspaces.marge,
+                  8,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: Semantics(
                     header: true,
@@ -113,9 +140,7 @@ class _AdaptivePageState extends State<AdaptivePage> {
                   ),
                 ),
               ),
-            ...widget.slivers,
-            // Un état plein écran (vide, erreur, chargement) occupe déjà
-            // l'espace restant : une marge en plus créerait un défilement.
+            ..._contenu(context),
             if (!_pleinEcran)
               SliverToBoxAdapter(child: SizedBox(height: marges.bottom + 24)),
           ],
@@ -129,10 +154,7 @@ class _AdaptivePageState extends State<AdaptivePage> {
     final titre = Text(
       !widget.titreDiffere || _titreReplie ? widget.titre : '',
     );
-    final actions = [
-      for (final a in widget.actions)
-        if (!a.seulementIos) a.versMaterial(context),
-    ];
+    final actions = [for (final a in widget.actions) a.versMaterial(context)];
     final scroll = CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -140,10 +162,10 @@ class _AdaptivePageState extends State<AdaptivePage> {
           SliverAppBar.medium(title: Text(widget.titre), actions: actions)
         else
           SliverAppBar(pinned: true, title: titre, actions: actions),
-        ...widget.slivers,
+        ..._contenu(context),
         if (!_pleinEcran)
           SliverToBoxAdapter(
-            child: SizedBox(height: widget.boutonFlottant == null ? 24 : 96),
+            child: SizedBox(height: widget.actionPrincipale == null ? 24 : 96),
           ),
       ],
     );
@@ -152,7 +174,7 @@ class _AdaptivePageState extends State<AdaptivePage> {
       child: scroll,
     );
     return Scaffold(
-      floatingActionButton: widget.boutonFlottant,
+      floatingActionButton: _boutonFlottant(),
       body: rafraichir == null
           ? corps
           : RefreshIndicator(onRefresh: rafraichir, child: corps),
@@ -160,6 +182,4 @@ class _AdaptivePageState extends State<AdaptivePage> {
   }
 }
 
-/// Sliver qui remplit l'espace restant de la page (états vide, erreur,
-/// chargement). [AdaptivePage] n'ajoute alors pas de marge basse.
 abstract interface class SliverPleinEcran implements Widget {}

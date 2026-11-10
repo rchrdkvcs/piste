@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Préférences légères (thème, prénom affiché). Les candidatures, elles,
-/// vivent dans SQLite : shared_preferences n'est pas fait pour des données
-/// métier.
 class PreferencesController extends ChangeNotifier {
   static const _cleTheme = 'theme';
 
-  /// Clé historique : conservée pour ne pas perdre le prénom déjà saisi.
   static const _clePrenom = 'nom';
 
   SharedPreferences? _prefs;

@@ -1,7 +1,6 @@
 import 'package:piste/data/candidature_repository.dart';
 import 'package:piste/models/candidature.dart';
 
-/// Repository en mémoire, sans plugin natif. Peut simuler des pannes.
 class FakeCandidatureRepository implements CandidatureRepository {
   FakeCandidatureRepository([List<Candidature> initiales = const []]) {
     for (final c in initiales) {
@@ -30,7 +29,6 @@ class FakeCandidatureRepository implements CandidatureRepository {
 
   @override
   Future<Candidature> enregistrer(Candidature candidature) async {
-    // Laisse le temps à un second appui de se produire.
     await Future<void>.delayed(const Duration(milliseconds: 10));
     if (echecEcriture) {
       throw const CandidatureStorageException('écriture simulée');
@@ -40,6 +38,17 @@ class FakeCandidatureRepository implements CandidatureRepository {
     final enregistree = candidature.copyWith(id: id);
     _lignes[id] = enregistree;
     return enregistree;
+  }
+
+  @override
+  Future<void> enregistrerTous(List<Candidature> candidatures) async {
+    if (echecEcriture) {
+      throw const CandidatureStorageException('import simulé');
+    }
+    for (final c in candidatures) {
+      final id = ++_dernierId;
+      _lignes[id] = c.copyWith(id: id);
+    }
   }
 
   @override

@@ -1,9 +1,5 @@
 import '../models/candidature.dart';
 
-/// Jeu de données de démonstration, importable depuis les paramètres.
-///
-/// Les dates sont relatives à [maintenant] : l'accueil, les relances et les
-/// statistiques restent parlants quel que soit le jour de l'import.
 List<Candidature> candidaturesExemple(DateTime maintenant) {
   final jour = DateTime(maintenant.year, maintenant.month, maintenant.day);
   DateTime il(int jours) => jour.subtract(Duration(days: jours));

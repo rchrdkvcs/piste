@@ -2,36 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:piste/main.dart';
-import 'package:piste/models/candidature.dart';
 import 'package:piste/state/preferences_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_repository.dart';
-
-Future<FakeCandidatureRepository> lancer(
-  WidgetTester tester, [
-  List<Candidature> initiales = const [],
-]) async {
-  // Écran logique d'un iPhone 16 Pro (402 × 874).
-  tester.view
-    ..physicalSize = const Size(1206, 2622)
-    ..devicePixelRatio = 3;
-  addTearDown(tester.view.reset);
-
-  SharedPreferences.setMockInitialValues({});
-  final preferences = PreferencesController();
-  await preferences.charger();
-  final repo = FakeCandidatureRepository(initiales);
-  await tester.pumpWidget(PisteApp(repository: repo, preferences: preferences));
-  await tester.pumpAndSettle();
-  return repo;
-}
-
-/// Laisse disparaître la bannière de confirmation iOS (minuteur de 2,2 s).
-Future<void> attendreBanniere(WidgetTester tester) async {
-  await tester.pump(const Duration(seconds: 3));
-  await tester.pumpAndSettle();
-}
+import 'outils.dart';
 
 void main() {
   setUpAll(preparerFormats);
@@ -54,7 +29,7 @@ void main() {
       'Nexora',
     );
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Intitulé du poste *'),
+      find.widgetWithText(TextFormField, 'Poste *'),
       'Développeur Flutter',
     );
     await tester.tap(enregistrer);
@@ -123,7 +98,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Annuler'));
     await tester.pumpAndSettle();
-    // Toujours sur la fiche : titre de la barre et en-tête.
     expect(find.text('Spotify'), findsWidgets);
 
     await tester.tap(find.byTooltip('Supprimer la candidature'));
@@ -147,7 +121,7 @@ void main() {
         'Nexora',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Intitulé du poste *'),
+        find.widgetWithText(TextFormField, 'Poste *'),
         'Dev',
       );
       await tester.enterText(
@@ -188,7 +162,6 @@ void main() {
     await tester.tap(find.text('Ajouter une candidature'));
     await tester.pumpAndSettle();
 
-    // Formulaire intact : fermeture directe.
     await tester.tap(find.byType(CloseButton));
     await tester.pumpAndSettle();
     expect(find.text('Bienvenue dans Piste'), findsOneWidget);

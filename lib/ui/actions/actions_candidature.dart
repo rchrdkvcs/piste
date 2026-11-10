@@ -5,9 +5,6 @@ import '../../models/candidature.dart';
 import '../../state/candidature_controller.dart';
 import '../adaptive/adaptive.dart';
 
-/// Demande confirmation, supprime, puis informe. Renvoie `true` si la
-/// candidature a été supprimée (la liste valide alors le balayage, la fiche
-/// se ferme).
 Future<bool> supprimerAvecConfirmation(
   BuildContext context,
   CandidatureController controller,
@@ -20,24 +17,15 @@ Future<bool> supprimerAvecConfirmation(
     action: 'Supprimer',
   );
   if (!ok || !context.mounted) return false;
-  try {
-    await controller.supprimer(c.id!);
-    if (context.mounted) afficherInfo(context, 'Candidature supprimée');
-    return true;
-  } catch (_) {
-    if (context.mounted) {
-      await afficherErreur(
-        context,
-        titre: 'Suppression impossible.',
-        message: 'La candidature est conservée. Réessaie dans un instant.',
-      );
-    }
-    return false;
-  }
+  return executerAvecRetour(
+    context,
+    () => controller.supprimer(c.id!),
+    succes: 'Candidature supprimée',
+    titreErreur: 'Suppression impossible.',
+    messageErreur: 'La candidature est conservée. Réessaie dans un instant.',
+  );
 }
 
-/// Ouvre un lien web, un e-mail (`mailto:`) ou un appel (`tel:`) dans
-/// l'application dédiée. Affiche une erreur si rien ne peut l'ouvrir.
 Future<void> ouvrirExterne(
   BuildContext context,
   Uri uri, {

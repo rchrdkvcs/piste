@@ -1,14 +1,8 @@
-import 'dart:async';
-
 import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import 'package:flutter/material.dart';
 
-import '../../format/dates.dart';
 import 'plateforme.dart';
 
-/// Confirmation avant une action irréversible.
-/// iOS : alerte native (`UIAlertController` sur iOS 26) ; Android :
-/// `AlertDialog` Material.
 Future<bool> confirmerSuppression(
   BuildContext context, {
   required String titre,
@@ -22,7 +16,6 @@ Future<bool> confirmerSuppression(
   destructif: true,
 );
 
-/// Confirmation avant une action non destructive (import, ajout groupé).
 Future<bool> confirmerAction(
   BuildContext context, {
   required String titre,
@@ -97,7 +90,6 @@ Future<bool> _confirmer(
   return ok ?? false;
 }
 
-/// Saisie d'un texte court dans une alerte native.
 Future<String?> demanderTexte(
   BuildContext context, {
   required String titre,
@@ -198,45 +190,27 @@ class _DialogueTexteState extends State<_DialogueTexte> {
   }
 }
 
-/// Sélecteur de date natif : roue iOS ou calendrier Material.
-///
-/// [premiere] et [derniere] bornent le choix (par défaut : il y a 10 ans,
-/// fin de l'année dans 3 ans). La date initiale est ramenée dans ces bornes :
-/// une date ancienne ou lointaine ne fait pas planter le sélecteur.
-/// Le résultat est toujours une date sans heure.
-Future<DateTime?> choisirDate(
+Future<void> afficherAPropos(
   BuildContext context, {
-  DateTime? initiale,
-  required String titre,
-  DateTime? premiere,
-  DateTime? derniere,
+  required String nom,
+  required String version,
+  required String description,
+  required Widget icone,
 }) async {
-  final jour = aujourdhui();
-  final min = _sansHeure(premiere ?? DateTime(jour.year - 10));
-  var max = _sansHeure(derniere ?? DateTime(jour.year + 3, 12, 31));
-  if (max.isBefore(min)) max = min;
-  var depart = _sansHeure(initiale ?? jour);
-  if (depart.isBefore(min)) depart = min;
-  if (depart.isAfter(max)) depart = max;
-
-  final DateTime? choix;
   if (estCupertino(context)) {
-    choix = await AdaptiveDatePicker.show(
+    await AdaptiveAlertDialog.show(
       context: context,
-      initialDate: depart,
-      firstDate: min,
-      lastDate: max,
+      title: '$nom $version',
+      message: description,
+      actions: [AlertAction(title: 'OK', onPressed: () {})],
     );
-  } else {
-    choix = await showDatePicker(
-      context: context,
-      initialDate: depart,
-      firstDate: min,
-      lastDate: max,
-      helpText: titre,
-    );
+    return;
   }
-  return choix == null ? null : _sansHeure(choix);
+  showAboutDialog(
+    context: context,
+    applicationName: nom,
+    applicationVersion: version,
+    applicationIcon: icone,
+    children: [Text(description)],
+  );
 }
-
-DateTime _sansHeure(DateTime d) => DateTime(d.year, d.month, d.day);

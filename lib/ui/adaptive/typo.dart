@@ -1,17 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../ui/adaptive/plateforme.dart';
+import 'plateforme.dart';
 
-/// Échelle typographique par rôle.
-///
-/// iOS suit les tailles Apple (SF Pro : Large Title 34, Title 2 22,
-/// Title 3 20, Body 17, Subheadline 15, Footnote 13) ; Android suit
-/// l'échelle Material 3 du thème. Les écrans demandent un rôle, jamais une
-/// taille.
 abstract final class Typo {
-  /// Le style Cupertino est `inherit: false` sans ligne de base : certains
-  /// widgets (`SelectableText`) l'exigent, on la fournit ici.
   static TextStyle _base(BuildContext context) => estCupertino(context)
       ? CupertinoTheme.of(context).textTheme.textStyle
             .copyWith(textBaseline: TextBaseline.alphabetic)
@@ -30,7 +22,6 @@ abstract final class Typo {
     return style.copyWith(fontWeight: poids, height: hauteur);
   }
 
-  /// Titre de page déroulant avec le contenu.
   static TextStyle grandTitre(BuildContext context) => _role(
     context,
     ios: 34,
@@ -39,7 +30,6 @@ abstract final class Typo {
     hauteur: 1.15,
   );
 
-  /// Nom d'une candidature en tête de fiche, salutation.
   static TextStyle titre(BuildContext context) => _role(
     context,
     ios: 22,
@@ -48,7 +38,6 @@ abstract final class Typo {
     hauteur: 1.25,
   );
 
-  /// Titre de section.
   static TextStyle section(BuildContext context) => _role(
     context,
     ios: 20,
@@ -57,14 +46,12 @@ abstract final class Typo {
     hauteur: 1.25,
   );
 
-  /// Texte courant et intitulés de lignes.
   static TextStyle corps(BuildContext context) =>
       _role(context, ios: 17, material: (t) => t.bodyLarge, hauteur: 1.4);
 
   static TextStyle corpsGras(BuildContext context) =>
       corps(context).copyWith(fontWeight: FontWeight.w600);
 
-  /// Texte d'appoint (poste, description).
   static TextStyle secondaire(BuildContext context) => _role(
     context,
     ios: 15,
@@ -72,7 +59,6 @@ abstract final class Typo {
     hauteur: 1.4,
   ).copyWith(color: couleurTexteSecondaire(context));
 
-  /// Légendes sous un chiffre, pastilles.
   static TextStyle legende(BuildContext context) => _role(
     context,
     ios: 13,
@@ -80,7 +66,6 @@ abstract final class Typo {
     hauteur: 1.3,
   ).copyWith(color: couleurTexteSecondaire(context));
 
-  /// Chiffres d'indicateurs : chasse fixe pour qu'ils ne bougent pas.
   static TextStyle chiffre(BuildContext context, {double taille = 28}) =>
       _base(context).copyWith(
         fontSize: taille,
@@ -88,4 +73,18 @@ abstract final class Typo {
         height: 1.1,
         fontFeatures: const [FontFeature.tabularFigures()],
       );
+}
+
+class TexteSysteme extends StatelessWidget {
+  const TexteSysteme({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => estCupertino(context)
+      ? DefaultTextStyle(
+          style: CupertinoTheme.of(context).textTheme.textStyle,
+          child: child,
+        )
+      : child;
 }

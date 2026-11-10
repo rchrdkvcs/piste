@@ -30,10 +30,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-# Icônes générées depuis `LogoPiste` :
-#   flutter test tool/generer_icones_test.dart
-#   dart pub global activate flutter_launcher_icons
-#   dart pub global run flutter_launcher_icons
 flutter_launcher_icons:
   image_path: assets/icone/icone.png
   ios: true

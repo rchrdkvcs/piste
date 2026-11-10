@@ -4,20 +4,21 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/candidature.dart';
+import '../../state/indicateurs.dart';
+import '../../theme/app_theme.dart';
 import '../../theme/statut_couleurs.dart';
-import '../../theme/typo.dart';
 import '../adaptive/adaptive.dart';
 
-/// Anneau de répartition par statut, total au centre.
 class AnneauStatuts extends StatelessWidget {
-  const AnneauStatuts({super.key, required this.comptes, required this.total});
+  const AnneauStatuts(this.indicateurs, {super.key});
 
-  final Map<Statut, int> comptes;
-  final int total;
+  final Indicateurs indicateurs;
 
   @override
   Widget build(BuildContext context) {
-    final piste = couleurTexteSecondaire(context).withValues(alpha: 0.14);
+    final comptes = indicateurs.parStatut;
+    final total = indicateurs.total;
+    final piste = teinteDouce(couleurTexteSecondaire(context));
     final resume = comptes.entries
         .where((e) => e.value > 0)
         .map((e) => '${e.value} ${e.key.libelle.toLowerCase()}')

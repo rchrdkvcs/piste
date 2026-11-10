@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:piste/data/candidature_sqlite.dart';
 import 'package:piste/models/candidature.dart';
 
 void main() {
@@ -16,7 +17,9 @@ void main() {
       dateModification: DateTime(2026, 11, 4, 18),
     );
 
-    final relue = Candidature.fromDatabase(origine.toDatabase());
+    final relue = CandidatureSqlite.depuisLigne(
+      CandidatureSqlite.versLigne(origine),
+    );
 
     expect(relue.id, 7);
     expect(relue.entreprise, 'Asteria');
@@ -28,7 +31,7 @@ void main() {
   });
 
   test('un statut inconnu ne fait pas planter la lecture', () {
-    final relue = Candidature.fromDatabase({
+    final relue = CandidatureSqlite.depuisLigne({
       'id': 1,
       'entreprise': 'Nexora',
       'poste': 'Dev',
@@ -39,7 +42,6 @@ void main() {
     });
 
     expect(relue.statut, Statut.envoyee);
-    // Ligne issue de la V1 sans date de modification : repli sur la création.
     expect(relue.dateModification, relue.dateCreation);
     expect(relue.prochaineRelance, isNull);
   });

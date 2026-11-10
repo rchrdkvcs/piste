@@ -14,8 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../test/fake_repository.dart';
 
-/// Parcourt les écrans sur un appareil réel ou un simulateur et enregistre
-/// une capture de chacun (`flutter drive`, voir le README).
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -67,7 +65,6 @@ void main() {
 
   Future<void> capture(WidgetTester tester, String nom) async {
     await attendre(tester);
-    // Android exige de convertir la surface une fois avant de capturer.
     if (Platform.isAndroid && !surfaceConvertie) {
       await binding.convertFlutterSurfaceToImage();
       surfaceConvertie = true;
@@ -85,13 +82,10 @@ void main() {
     await capture(tester, '02_liste');
 
     await tester.tap(find.text('Google').first);
-    // Mi-transition : la barre d'outils doit rester en place.
     await tester.pump(const Duration(milliseconds: 180));
     await binding.takeScreenshot('${Platform.operatingSystem}_03a_transition');
     await capture(tester, '03_fiche');
 
-    // Retour puis feuille de saisie.
-    // Retour par le navigateur (le bouton retour est natif, hors Flutter).
     Navigator.of(tester.element(find.byType(CandidatureDetailPage))).pop();
     await attendre(tester);
 

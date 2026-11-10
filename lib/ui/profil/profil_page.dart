@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../app_info.dart';
 import '../../state/candidature_controller.dart';
 import '../../state/preferences_controller.dart';
-import '../../theme/typo.dart';
 import '../adaptive/adaptive.dart';
+import '../widgets/avatar.dart';
+import '../widgets/logo_piste.dart';
 import 'parametres_page.dart';
 
-/// Profil local : Piste fonctionne sans compte, le prénom sert uniquement
-/// à personnaliser l'accueil.
 class ProfilPage extends StatelessWidget {
   const ProfilPage({
     super.key,
@@ -37,7 +37,7 @@ class ProfilPage extends StatelessWidget {
       listenable: Listenable.merge([preferences, controller]),
       builder: (context, _) {
         final nom = preferences.prenom;
-        final total = controller.total;
+        final total = controller.indicateurs.total;
         return AdaptivePage(
           titre: 'Profil',
           slivers: [
@@ -61,7 +61,7 @@ class ProfilPage extends StatelessWidget {
                     detail: '$total',
                     iconeMaterial: Icons.work_outline,
                     iconeCupertino: CupertinoIcons.briefcase_fill,
-                    couleurIcone: CupertinoColors.systemIndigo,
+                    teinte: TeinteIcone.indigo,
                   ),
                 ],
               ),
@@ -71,10 +71,10 @@ class ProfilPage extends StatelessWidget {
                 titre: 'Application',
                 lignes: [
                   LigneListe(
-                    titre: estCupertino(context) ? 'Réglages' : 'Paramètres',
+                    titre: libelleReglages(context),
                     iconeMaterial: Icons.settings_outlined,
                     iconeCupertino: CupertinoIcons.gear_solid,
-                    couleurIcone: CupertinoColors.systemGrey,
+                    teinte: TeinteIcone.gris,
                     onTap: () => ouvrirPage<void>(
                       context,
                       (_) => ParametresPage(
@@ -87,8 +87,14 @@ class ProfilPage extends StatelessWidget {
                     titre: 'À propos de Piste',
                     iconeMaterial: Icons.info_outline,
                     iconeCupertino: CupertinoIcons.info,
-                    couleurIcone: CupertinoColors.systemBlue,
-                    onTap: () => afficherAPropos(context),
+                    teinte: TeinteIcone.bleu,
+                    onTap: () => afficherAPropos(
+                      context,
+                      nom: InfosApp.nom,
+                      version: InfosApp.version,
+                      description: InfosApp.description,
+                      icone: const LogoPiste(taille: 48),
+                    ),
                   ),
                 ],
                 pied:
@@ -103,37 +109,15 @@ class ProfilPage extends StatelessWidget {
   }
 
   Widget _entete(BuildContext context, String nom) {
-    final accent = couleurAccent(context);
-    final initiales = nom.isEmpty
-        ? null
-        : nom
-              .split(RegExp(r'\s+'))
-              .where((m) => m.isNotEmpty)
-              .take(2)
-              .map((m) => m.characters.first.toUpperCase())
-              .join();
     return MergeSemantics(
       child: Column(
         children: [
-          ExcludeSemantics(
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: accent.withValues(alpha: 0.14),
-              foregroundColor: accent,
-              child: initiales == null
-                  ? Icon(
-                      icone(context, Icons.person, CupertinoIcons.person_fill),
-                      size: 40,
-                    )
-                  : Text(
-                      initiales,
-                      textScaler: TextScaler.noScaling,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-            ),
+          AvatarInitiales(
+            texte: nom,
+            couleur: couleurAccent(context),
+            taille: 80,
+            lettres: 2,
+            iconeVide: icone(context, Icons.person, CupertinoIcons.person_fill),
           ),
           const SizedBox(height: 12),
           Text(nom.isEmpty ? 'Ton profil' : nom, style: Typo.titre(context)),
