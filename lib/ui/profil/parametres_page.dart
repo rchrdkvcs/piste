@@ -2,6 +2,8 @@ import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/exemples.dart';
+import '../../state/candidature_controller.dart';
 import '../../state/preferences_controller.dart';
 import '../../theme/typo.dart';
 import '../adaptive/adaptive.dart';
@@ -10,9 +12,40 @@ import '../widgets/logo_piste.dart';
 const versionApplication = '1.0.0';
 
 class ParametresPage extends StatelessWidget {
-  const ParametresPage({super.key, required this.preferences});
+  const ParametresPage({
+    super.key,
+    required this.preferences,
+    required this.controller,
+  });
 
   final PreferencesController preferences;
+  final CandidatureController controller;
+
+  /// Ajoute le jeu de démonstration après confirmation : les candidatures
+  /// déjà saisies sont conservées.
+  Future<void> _importerExemples(BuildContext context) async {
+    final confirme = await confirmerAction(
+      context,
+      titre: 'Importer le jeu de données ?',
+      message:
+          '${candidaturesExemple(DateTime.now()).length} candidatures '
+          'd’exemple seront ajoutées à tes candidatures existantes.',
+      action: 'Importer',
+    );
+    if (!confirme || !context.mounted) return;
+    try {
+      final n = await controller.importer(candidaturesExemple(DateTime.now()));
+      if (context.mounted) afficherInfo(context, '$n candidatures importées');
+    } catch (_) {
+      if (context.mounted) {
+        await afficherErreur(
+          context,
+          titre: 'Import impossible.',
+          message: 'Réessaie dans un instant.',
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,21 +95,30 @@ class ParametresPage extends StatelessWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: SectionListe(
                 titre: 'Données',
                 lignes: [
-                  LigneListe(
+                  const LigneListe(
                     titre: 'Stockage',
                     detail: 'Sur cet appareil',
                     iconeMaterial: Icons.storage_outlined,
                     iconeCupertino: CupertinoIcons.tray_full_fill,
                     couleurIcone: CupertinoColors.systemGreen,
                   ),
+                  LigneListe(
+                    titre: 'Importer le jeu de données',
+                    iconeMaterial: Icons.download_outlined,
+                    iconeCupertino: CupertinoIcons.tray_arrow_down_fill,
+                    couleurIcone: CupertinoColors.systemBlue,
+                    onTap: () => _importerExemples(context),
+                  ),
                 ],
                 pied:
                     'Les candidatures sont enregistrées localement. Elles '
-                    'sont effacées si l’app est désinstallée.',
+                    'sont effacées si l’app est désinstallée. Le jeu de '
+                    'données ajoute des candidatures d’exemple pour '
+                    'découvrir l’app.',
               ),
             ),
             SliverToBoxAdapter(

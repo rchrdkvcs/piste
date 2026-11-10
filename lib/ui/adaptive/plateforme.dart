@@ -27,7 +27,7 @@ Color couleurErreur(BuildContext context) => estCupertino(context)
 /// Fond des cartes : couleur système groupée sur iOS, surface Material sinon.
 Color couleurCarte(BuildContext context) => estCupertino(context)
     ? CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context)
-    : Theme.of(context).colorScheme.surfaceContainerLowest;
+    : Theme.of(context).colorScheme.surfaceContainerLow;
 
 Color couleurTexteSecondaire(BuildContext context) => estCupertino(context)
     ? CupertinoColors.secondaryLabel.resolveFrom(context)

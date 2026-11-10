@@ -38,10 +38,6 @@ class ChampRecherche extends StatelessWidget {
       controller: recherche,
       hintText: 'Entreprise, poste ou contact',
       elevation: const WidgetStatePropertyAll(0),
-      backgroundColor: WidgetStatePropertyAll(couleurCarte(context)),
-      side: WidgetStatePropertyAll(
-        BorderSide(color: Theme.of(context).colorScheme.outline),
-      ),
       leading: const Icon(Icons.search),
       onChanged: controller.rechercher,
       trailing: [

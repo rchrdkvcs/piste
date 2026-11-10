@@ -14,6 +14,34 @@ Future<bool> confirmerSuppression(
   required String titre,
   required String message,
   required String action,
+}) => _confirmer(
+  context,
+  titre: titre,
+  message: message,
+  action: action,
+  destructif: true,
+);
+
+/// Confirmation avant une action non destructive (import, ajout groupé).
+Future<bool> confirmerAction(
+  BuildContext context, {
+  required String titre,
+  required String message,
+  required String action,
+}) => _confirmer(
+  context,
+  titre: titre,
+  message: message,
+  action: action,
+  destructif: false,
+);
+
+Future<bool> _confirmer(
+  BuildContext context, {
+  required String titre,
+  required String message,
+  required String action,
+  required bool destructif,
 }) async {
   if (estCupertino(context)) {
     var confirme = false;
@@ -29,7 +57,9 @@ Future<bool> confirmerSuppression(
         ),
         AlertAction(
           title: action,
-          style: AlertActionStyle.destructive,
+          style: destructif
+              ? AlertActionStyle.destructive
+              : AlertActionStyle.primary,
           onPressed: () => confirme = true,
         ),
       ],
@@ -41,7 +71,9 @@ Future<bool> confirmerSuppression(
     builder: (context) {
       final scheme = Theme.of(context).colorScheme;
       return AlertDialog(
-        icon: Icon(Icons.delete_outline, color: scheme.error),
+        icon: destructif
+            ? Icon(Icons.delete_outline, color: scheme.error)
+            : null,
         title: Text(titre),
         content: Text(message),
         actions: [
@@ -51,8 +83,8 @@ Future<bool> confirmerSuppression(
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: scheme.error,
-              foregroundColor: scheme.onError,
+              backgroundColor: destructif ? scheme.error : null,
+              foregroundColor: destructif ? scheme.onError : null,
               minimumSize: const Size(0, 40),
             ),
             onPressed: () => Navigator.pop(context, true),

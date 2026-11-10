@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:piste/data/exemples.dart';
 import 'package:piste/models/candidature.dart';
 import 'package:piste/state/candidature_controller.dart';
 
@@ -78,5 +79,38 @@ void main() {
     expect(controller.total, 1);
     expect(controller.occupe, isFalse);
     controller.dispose();
+  });
+
+  test("importer ajoute le jeu d'exemple sans toucher l'existant", () async {
+    final repo = FakeCandidatureRepository([exemple(id: 1)]);
+    final controller = CandidatureController(repo);
+    await controller.charger();
+
+    final maintenant = DateTime(2026, 11, 10, 9);
+    final exemples = candidaturesExemple(maintenant);
+    final n = await controller.importer(exemples);
+
+    expect(n, exemples.length);
+    expect(controller.total, exemples.length + 1);
+    expect(controller.parId(1), isNotNull);
+    expect(controller.aRelancer(maintenant), isNotEmpty);
+    for (final s in Statut.values) {
+      expect(controller.compter(s), greaterThan(0), reason: s.name);
+    }
+    controller.dispose();
+  });
+
+  test("le jeu d'exemple respecte les règles de saisie", () {
+    final maintenant = DateTime(2026, 11, 10);
+    for (final c in candidaturesExemple(maintenant)) {
+      expect(ReglesCandidature.entreprise(c.entreprise), isNull);
+      expect(ReglesCandidature.poste(c.poste), isNull);
+      expect(ReglesCandidature.lienAnnonce(c.lienAnnonce), isNull);
+      expect(ReglesCandidature.email(c.contact.email), isNull);
+      expect(ReglesCandidature.telephone(c.contact.telephone), isNull);
+      expect(c.dateEnvoi!.isAfter(maintenant), isFalse);
+      final relance = c.prochaineRelance;
+      if (relance != null) expect(relance.isBefore(c.dateEnvoi!), isFalse);
+    }
   });
 }

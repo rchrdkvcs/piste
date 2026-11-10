@@ -77,7 +77,10 @@ class ProfilPage extends StatelessWidget {
                     couleurIcone: CupertinoColors.systemGrey,
                     onTap: () => ouvrirPage<void>(
                       context,
-                      (_) => ParametresPage(preferences: preferences),
+                      (_) => ParametresPage(
+                        preferences: preferences,
+                        controller: controller,
+                      ),
                     ),
                   ),
                   LigneListe(

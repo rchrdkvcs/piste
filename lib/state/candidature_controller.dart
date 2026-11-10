@@ -122,6 +122,18 @@ class CandidatureController extends ChangeNotifier {
     });
   }
 
+  /// Ajoute [candidatures] à celles existantes (jeu de démonstration),
+  /// puis relit la base. Renvoie le nombre de candidatures ajoutées.
+  Future<int> importer(List<Candidature> candidatures) {
+    return _operation(() async {
+      for (final c in candidatures) {
+        await repository.enregistrer(c);
+      }
+      await charger(silencieux: true);
+      return candidatures.length;
+    });
+  }
+
   Future<void> supprimer(int id) {
     return _operation(() async {
       await repository.supprimer(id);

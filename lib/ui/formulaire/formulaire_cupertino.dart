@@ -62,12 +62,19 @@ class FormulaireCupertino extends StatelessWidget {
               children: [
                 CupertinoFormSection.insetGrouped(
                   header: const Text('Poste'),
+                  footer: Text(
+                    'Les champs marqués * sont obligatoires.',
+                    style: Typo.legende(context),
+                  ),
                   decoration: decoration,
                   children: [
                     CupertinoTextFormFieldRow(
                       controller: champs.entreprise,
                       focusNode: champs.focusEntreprise,
-                      prefix: const Text('Entreprise'),
+                      prefix: const Text(
+                        'Entreprise *',
+                        semanticsLabel: 'Entreprise, obligatoire',
+                      ),
                       placeholder: 'Google',
                       textAlign: TextAlign.end,
                       textCapitalization: TextCapitalization.words,
@@ -78,7 +85,10 @@ class FormulaireCupertino extends StatelessWidget {
                     CupertinoTextFormFieldRow(
                       controller: champs.poste,
                       focusNode: champs.focusPoste,
-                      prefix: const Text('Poste'),
+                      prefix: const Text(
+                        'Poste *',
+                        semanticsLabel: 'Poste, obligatoire',
+                      ),
                       placeholder: 'Développeur Flutter',
                       textAlign: TextAlign.end,
                       textCapitalization: TextCapitalization.sentences,
