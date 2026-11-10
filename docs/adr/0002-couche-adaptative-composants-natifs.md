@@ -1,0 +1,3 @@
+# Une couche adaptative, des composants natifs par plateforme
+
+Chaque écran décrit son contenu une fois et passe par `lib/ui/adaptive/` pour obtenir le composant natif de la plateforme : Liquid Glass via `adaptive_platform_ui` sur iOS 26+, Cupertino sur iOS plus ancien, Material 3 sur Android. On a écarté une charte unique dessinée sur mesure (moins de code, mais étrangère sur les deux systèmes) et deux arbres d'écrans séparés (fidèles, mais logique dupliquée). La plateforme est lue depuis `Theme.of(context).platform` et non `Platform.isIOS`, pour pouvoir tester les deux rendus avec `TargetPlatformVariant`.

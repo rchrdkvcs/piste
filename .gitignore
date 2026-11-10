@@ -1,0 +1,70 @@
+# Piste — Flutter (Android, iOS)
+# Les règles natives détaillées vivent dans android/.gitignore et ios/.gitignore.
+# À versionner : pubspec.lock (application), .metadata (migrations Flutter).
+
+# --- Dart / Flutter ---------------------------------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/coverage/
+**/doc/api/
+.widget_preview/
+migrate_working_dir/
+
+# Symboles et cartes d'obfuscation (build --split-debug-info / --obfuscate)
+app.*.symbols
+app.*.map.json
+/symbols/
+
+# --- Android ----------------------------------------------------------------
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.kotlin/
+.cxx/
+
+# Signature : ne jamais publier les clés
+key.properties
+*.keystore
+*.jks
+
+# --- iOS / macOS ------------------------------------------------------------
+**/ios/Flutter/.last_build_id
+**/DerivedData/
+**/Pods/
+**/xcuserdata/
+.swiftpm/
+.build/
+*.ipa
+*.dSYM.zip
+
+# --- Secrets et configuration locale ---------------------------------------
+.env
+.env.*
+!.env.example
+*.local.json
+**/GoogleService-Info.plist
+**/google-services.json
+
+# --- Éditeurs et outils -----------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+*.swp
+.claude/settings.local.json
+
+# --- Système ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.log
+*.pyc
