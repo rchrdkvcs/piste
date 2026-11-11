@@ -77,7 +77,10 @@ class _PisteAppState extends State<PisteApp> {
         locale: const Locale('fr', 'FR'),
         supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        builder: (context, child) => TexteSysteme(child: child!),
+        builder: (context, child) => LuminositeImposee(
+          mode: widget.preferences.themeMode,
+          child: TexteSysteme(child: child!),
+        ),
         home: PisteShell(
           controller: controller,
           preferences: widget.preferences,

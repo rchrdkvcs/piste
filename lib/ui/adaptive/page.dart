@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
 import 'barre.dart';
+import 'barre_titre.dart';
 import 'filtre.dart';
 import 'plateforme.dart';
 import 'typo.dart';
@@ -43,8 +44,8 @@ class AdaptivePage extends StatefulWidget {
 class _AdaptivePageState extends State<AdaptivePage> {
   static const _seuilTitre = 44.0;
 
-  static const _hauteurBarre = 44.0;
   bool _titreReplie = false;
+  bool _sousBarre = false;
 
   bool get _pleinEcran =>
       widget.slivers.isNotEmpty && widget.slivers.last is SliverPleinEcran;
@@ -54,7 +55,13 @@ class _AdaptivePageState extends State<AdaptivePage> {
     final m = n.metrics;
     final position = m.pixels.clamp(m.minScrollExtent, m.maxScrollExtent);
     final replie = position > _seuilTitre;
-    if (replie != _titreReplie) setState(() => _titreReplie = replie);
+    final sousBarre = position > 0;
+    if (replie != _titreReplie || sousBarre != _sousBarre) {
+      setState(() {
+        _titreReplie = replie;
+        _sousBarre = sousBarre;
+      });
+    }
     return false;
   }
 
@@ -72,6 +79,15 @@ class _AdaptivePageState extends State<AdaptivePage> {
           onPressed: principale.onPressed,
         ),
     ];
+  }
+
+  static double _largeurActions(List<ActionBarre> actions) {
+    if (actions.isEmpty) return 16;
+    final boutons = actions.fold<double>(
+      0,
+      (total, a) => total + (a.texte ? 28 + a.libelle.length * 9.5 : 44),
+    );
+    return 24 + boutons + 8 * (actions.length - 1);
   }
 
   List<Widget> _contenu(BuildContext context) => [
@@ -98,9 +114,7 @@ class _AdaptivePageState extends State<AdaptivePage> {
 
   Widget _cupertino(BuildContext context) {
     final rafraichir = widget.surActualisation;
-    final marges = MediaQuery.paddingOf(context);
     final differe = widget.grandTitre || widget.titreDiffere;
-    final titreBarre = !differe || _titreReplie ? widget.titre : null;
 
     return AdaptiveScaffold(
       backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(
@@ -108,43 +122,58 @@ class _AdaptivePageState extends State<AdaptivePage> {
       ),
       appBar: AdaptiveAppBar(
         useNativeToolbar: true,
-        title: titreBarre,
+        titleWidget: TitreBarre(
+          titre: widget.titre,
+          visible: !differe || _titreReplie,
+          gauche: Navigator.of(context).canPop() ? 62 : 16,
+          droite: _largeurActions(_actionsIos),
+        ),
         actions: [for (final a in _actionsIos) a.versIos(context)],
       ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: _surDefilement,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          slivers: [
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: MediaQuery.viewPaddingOf(context).top + _hauteurBarre,
+      body: Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: _surDefilement,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
               ),
-            ),
-            if (rafraichir != null)
-              CupertinoSliverRefreshControl(onRefresh: rafraichir),
-            if (widget.grandTitre)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  PisteEspaces.marge,
-                  4,
-                  PisteEspaces.marge,
-                  8,
+              slivers: [
+                const SliverSafeArea(
+                  bottom: false,
+                  sliver: SliverToBoxAdapter(),
                 ),
-                sliver: SliverToBoxAdapter(
-                  child: Semantics(
-                    header: true,
-                    child: Text(widget.titre, style: Typo.grandTitre(context)),
+                if (rafraichir != null)
+                  CupertinoSliverRefreshControl(onRefresh: rafraichir),
+                if (widget.grandTitre)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      PisteEspaces.marge,
+                      4,
+                      PisteEspaces.marge,
+                      8,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: Semantics(
+                        header: true,
+                        child: Text(
+                          widget.titre,
+                          style: Typo.grandTitre(context),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ..._contenu(context),
-            if (!_pleinEcran)
-              SliverToBoxAdapter(child: SizedBox(height: marges.bottom + 24)),
-          ],
-        ),
+                ..._contenu(context),
+                if (!_pleinEcran)
+                  const SliverSafeArea(
+                    top: false,
+                    sliver: SliverToBoxAdapter(child: SizedBox(height: 24)),
+                  ),
+              ],
+            ),
+          ),
+          FondBarre(visible: _sousBarre),
+        ],
       ),
     );
   }

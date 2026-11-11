@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
 import 'elements.dart';
+import 'navigation.dart';
 import 'plateforme.dart';
 import 'typo.dart';
 
@@ -14,6 +15,7 @@ class PageSaisie extends StatelessWidget {
     required this.onAnnuler,
     required this.onEnregistrer,
     required this.sections,
+    this.fermableParGlissement = true,
   });
 
   final String titre;
@@ -21,6 +23,7 @@ class PageSaisie extends StatelessWidget {
   final VoidCallback onAnnuler;
   final VoidCallback onEnregistrer;
   final List<Widget> sections;
+  final bool fermableParGlissement;
 
   @override
   Widget build(BuildContext context) =>
@@ -53,6 +56,11 @@ class PageSaisie extends StatelessWidget {
         child: Stack(
           children: [
             ListView(
+              controller: fermableParGlissement
+                  ? DefilementFeuille.maybeOf(context)
+                  : null,
+              primary: false,
+              physics: const AlwaysScrollableScrollPhysics(),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.only(bottom: 24),
               children: sections,

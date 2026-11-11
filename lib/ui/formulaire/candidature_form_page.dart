@@ -108,17 +108,23 @@ class _CandidatureFormPageState extends State<CandidatureFormPage> {
       },
       child: Form(
         key: _formKey,
-        child: PageSaisie(
-          titre: _edition ? 'Modifier la candidature' : 'Nouvelle candidature',
-          enCours: _enCours,
-          onAnnuler: _quitter,
-          onEnregistrer: _enregistrer,
-          sections: sectionsCandidature(
-            _champs,
-            edition: _edition,
-            onStatut: (s) => setState(() => _champs.statut = s),
-            onDate: _choisirDate,
-            onEffacerDate: _effacerDate,
+        child: ListenableBuilder(
+          listenable: _champs.saisie,
+          builder: (context, _) => PageSaisie(
+            titre: _edition
+                ? 'Modifier la candidature'
+                : 'Nouvelle candidature',
+            enCours: _enCours,
+            fermableParGlissement: !_enCours && !_champs.modifie,
+            onAnnuler: _quitter,
+            onEnregistrer: _enregistrer,
+            sections: sectionsCandidature(
+              _champs,
+              edition: _edition,
+              onStatut: (s) => setState(() => _champs.statut = s),
+              onDate: _choisirDate,
+              onEffacerDate: _effacerDate,
+            ),
           ),
         ),
       ),

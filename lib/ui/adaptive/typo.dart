@@ -88,3 +88,24 @@ class TexteSysteme extends StatelessWidget {
         )
       : child;
 }
+
+class LuminositeImposee extends StatelessWidget {
+  const LuminositeImposee({super.key, required this.mode, required this.child});
+
+  final ThemeMode mode;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final luminosite = switch (mode) {
+      ThemeMode.light => Brightness.light,
+      ThemeMode.dark => Brightness.dark,
+      ThemeMode.system => null,
+    };
+    if (luminosite == null) return child;
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(platformBrightness: luminosite),
+      child: child,
+    );
+  }
+}

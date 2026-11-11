@@ -74,6 +74,16 @@ class ChampsCandidature {
     dateModification: maintenant,
   );
 
+  Listenable get saisie => Listenable.merge([
+    entreprise,
+    poste,
+    lien,
+    notes,
+    contactNom,
+    contactEmail,
+    contactTelephone,
+  ]);
+
   bool get modifie => !lire(DateTime(0)).memeContenu(_depart);
 
   void focaliserPremiereErreur() {

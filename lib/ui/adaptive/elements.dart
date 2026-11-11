@@ -185,14 +185,21 @@ class Segments<T extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cles = options.keys.toList();
     return SizedBox(
       width: double.infinity,
       child: estCupertino(context)
-          ? AdaptiveSegmentedControl(
-              labels: options.values.toList(),
-              selectedIndex: cles.indexOf(valeur),
-              onValueChanged: (i) => onChanged(cles[i]),
+          ? CupertinoSlidingSegmentedControl<T>(
+              groupValue: valeur,
+              onValueChanged: (v) {
+                if (v != null) onChanged(v);
+              },
+              children: {
+                for (final e in options.entries)
+                  e.key: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(e.value, maxLines: 1),
+                  ),
+              },
             )
           : SegmentedButton<T>(
               showSelectedIcon: false,
